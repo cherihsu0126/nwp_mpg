@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="./../public/stylesheets/style.css" />
+    <link rel="stylesheet" href="./../public/stylesheets/element-plus/index.min.css">
+    <script type="text/javascript" src="./../public/javascripts/viewPlugin/axios.min.js"></script>
+    <script typr="text/javascript" src="./../public/javascripts/viewPlugin/vue.global.min.js"></script>
+    <script typr="text/javascript" src="./../public/javascripts/viewPlugin/element-plus/index.full.min.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header height="80px">
+                <h2><%= title %></h2>
+                <a href="https://www.newebpay.com/website/Page/download_file?name=Online Payment-Foreground Scenario API Specification_NDNF-1.0.9.pdf" target="_blank" class="type_payment">線上交易─幕前支付技術串接手冊_NDNF-1.0.9&nbsp;文件下載<i class="fa fa-search-plus" aria-hidden="true"></i></a>
+            </el-header>
+        </el-container>
+
+        <el-container>
+            <el-main>
+                <el-row>
+                    <el-col style="display:flex; justify-content: center;">
+                        <el-card style="width:70%;">
+                            <template #header>
+                                <div class="card-header">
+                                    <b>Node.js AES 與 SHA 加密程式範例</b>
+                                    <el-button @click="copyCodeBtn" class="button" text>複製</el-button>
+                                </div>
+                            </template>
+                            <pre id="cryptoCode" style="width:100%; background-color:rgb(54, 55, 58); color:#d5d5d5; margin-bottom:30px;">
+        const crypto = require('crypto');
+        
+        // TradeInfo字串組合
+        function dataChain(TradeInfo) {
+            return Object.keys(TradeInfo).map(key => {
+                let value = TradeInfo[key];
+                if (['ItemDesc', 'Email'].includes(key)) {
+                    value = encodeURIComponent(value); //特殊字元編碼
+                }
+                return `${key}=${value}`;
+            }).join('&');
+        }
+            
+        // AES 加密
+        function aes_encrypt(TradeInfo) {
+            let HASHKEY = TradeInfo.key;
+            let HASHIV = TradeInfo.iv;
+            if (String(TradeInfo.EncryptType) === '1') { //EncryptType 加密模式
+                // AES/GCM加密模式
+                const cipher_iv = Buffer.from(crypto.randomBytes(12), 'utf8');
+                const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(HASHKEY, 'utf8'), cipher_iv, {authTagLength:16});
+                let encrypted = Buffer.concat([ cipher.update( dataChain(TradeInfo),'utf8' ), cipher.final(), cipher.getAuthTag() ]);
+                const tag = cipher.getAuthTag();
+                return `${cipher_iv.toString('hex')}.${encrypted.toString('hex')}.${tag.toString('hex')}`;
+            } else {
+                // AES/CBC加密模式
+                const cipher = crypto.createCipheriv('aes-256-cbc', HASHKEY, HASHIV);
+                const encrypted = Buffer.concat([ cipher.update( dataChain(TradeInfo),'utf8' ), cipher.final() ]);
+                return encrypted.toString('hex');
+            }
+        }
+
+        // SHA 加密
+        function sha_encrypt(aesEncrypt, HASHKEY, HASHIV) {
+          const sha = crypto.createHash('sha256');
+          const plainText = `HashKey=${HASHKEY}&${aesEncrypt}&HashIV=${HASHIV}`;
+      
+          return sha.update(plainText).digest('hex').toUpperCase();
+        }
+
+        module.exports = {
+            dataChain,
+            aes_encrypt,
+            sha_encrypt,
+        };
+                            </pre>
+                        </el-card>
+                    </el-col>
+                    
+                    <el-col style="display:flex; justify-content: center;">
+                        <div style="margin-top:30px;">
+                            <el-divider content-position="center">訂單資料未加密</el-divider>
+                            <el-form-item>
+                                <el-input v-model="order" type="textarea" cols="100" rows="5" :readyonly="true"/>
+                            </el-form-item>
+                        </div>
+                    </el-col>
+
+                    <el-col style="display:flex; justify-content: center;">
+                        <form :action="enOrder.order.url" method="post" style="margin-top:30px;">
+                            <el-divider content-position="center">加密後交易測試範例</el-divider>
+                            <h4 class="text_center"><el-text type="danger">* 為Form POST必傳送項目</el-text></h4>
+                            
+                            <el-form-item label="商店代號：" :rules="[{required:true}]" label-width="300px">
+                                <el-input name="MerchantID" v-model="enOrder.order.MerchantID" maxlength="15" required :readyonly="true"/>
+                            </el-form-item>
+                            <el-form-item label="串接程式版本：" :rules="[{required:true}]" label-width="300px">
+                                <el-input name="Version" v-model="enOrder.order.Version" maxlength="5" required :readyonly="true"/>
+                            </el-form-item>
+                            <el-form-item label="加密交易內容：" :rules="[{required:true}]" label-width="300px">
+                                <el-input name="TradeInfo" v-model="enOrder.TradeInfo" type="textarea" cols="100" rows="9" :readyonly="true"/>
+                            </el-form-item>
+                            <el-form-item label="加密壓碼內容：" :rules="[{required:true}]" label-width="300px">
+                                <el-input name="TradeSha" v-model="enOrder.TradeSha" type="textarea" cols="100" rows="1" :readyonly="true"/>
+                            </el-form-item>
+                            <div style="display:flex; justify-content:center;">
+                                <el-button type="primary" native-type="submit" style="margin-top:10px; padding:18px 24px;">
+                                    送出交易測試
+                                </el-button>
+                            </div>
+                            <a href="/">回支付選擇頁</a>
+                        </form>
+                    </el-col>
+                </el-row>
+            </el-main>
+            <el-footer> © 2024 Neweb Technologies Co., Ltd. </el-footer>
+        </el-container>
+    </div>
+
+    <script type="module">
+        const { ref } = Vue;
+        const App = {
+            setup() {
+                const formRef = ref(null);
+                let enOrder = ref({
+                    order: {},      //未加密
+                    TradeInfo: '',  //加密DATA
+                    TradeSha: '',   //加密DATA
+                })
+                let order = ref('')
+                
+                const href = window.location.href
+                const orderData = href.split('?')[1]
+                const decodeData = decodeURIComponent(orderData);
+                console.log('decodeData',decodeData)
+
+                if (decodeData) {
+                    const parsedData = JSON.parse(decodeData);
+                    enOrder = { ...parsedData }
+                    console.log('enOrder',enOrder)
+                    order = JSON.stringify(enOrder.order)
+                }
+
+                // 複製程式碼
+                function copyCodeBtn(){
+                    const content = document.getElementById('cryptoCode')
+                    if (content) {
+                        const range = document.createRange();
+                        window.getSelection().removeAllRanges();
+                        range.selectNode(content);
+                        window.getSelection().addRange(range);
+                        try {
+                            document.execCommand('copy');
+                            window.getSelection().removeAllRanges();
+                            console.log('内容已複製');
+                        } catch (err) {
+                            console.error('無法複製内容', err);
+                        }
+                    }
+                }
+
+                return { formRef, order, enOrder, copyCodeBtn};
+            }
+        }
+        Vue.createApp(App).use(ElementPlus).mount('#app');
+    </script>
+    <style>
+        .card-header{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .el-card__body{
+            background-color:rgb(54, 55, 58);
+        }
+    </style>
+</body>
+
+</html>

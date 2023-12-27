@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="./../public/stylesheets/style.css" />
+    <link rel="stylesheet" href="./../public/stylesheets/element-plus/index.min.css">
+    <script type="text/javascript" src="./../public/javascripts/viewPlugin/axios.min.js"></script>
+    <script typr="text/javascript" src="./../public/javascripts/viewPlugin/vue.global.min.js"></script>
+    <script typr="text/javascript" src="./../public/javascripts/viewPlugin/element-plus/index.full.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <el-container>
+        <el-header height="80px">
+            <h2><%= title %></h2>
+            <a href="https://www.newebpay.com/website/Page/download_file?name=Online Payment-Foreground Scenario API Specification_NDNF-1.0.9.pdf" target="_blank" class="type_payment">線上交易─幕前支付技術串接手冊_NDNF-1.0.9&nbsp;文件下載<i class="fa fa-search-plus" aria-hidden="true"></i></a>
+        </el-header>
+        <el-container>
+            <el-aside width="400px">
+                <h4 style="color:white; padding:20px 20px 0;">支付方式</h4>
+                <el-menu
+                    text-color="#fff"
+                    background-color="#225b95"
+                    active-text-color="#00CFFF"
+                    @select="updateSelectedPayway"
+                >
+                    <el-menu-item 
+                        v-for="option in paywayOptions" :key="option.value"
+                        default-active="baseParam"
+                        :index="option.value"
+                    >
+                        <div style="padding-left:30px;">{{ option.optionName }}</div>
+                    </el-menu-item>
+                </el-menu>
+            </el-aside>
+
+            <el-container>
+                <el-main>
+                    <el-form ref="formRef" :model="totalParam" label-width="300px" style="max-width: 850px;">
+                        <h3 class="text_center" style="color:#225b95;">{{ selectName }}</h3>
+                        <!-- ------------------------------------ 基本參數 = 不指定支付方式(依設定) ------------------------------------ -->
+                        <h4 class="text_center">各支付基本項目 <el-text type="danger">* 為必填欄位</el-text></h4>
+                        <el-form-item label="API網址：" prop="url" :rules="[{required:true}]">
+                            <el-input name="url" v-model="totalParam.url" required/>
+                        </el-form-item>
+                        <el-form-item label="商店代號：" prop="MerchantID" :rules="[{required:true}]">
+                            <el-input name="MerchantID" v-model="totalParam.MerchantID" maxlength="15" required/>
+                        </el-form-item>
+                        <el-form-item label="key：" prop="key" :rules="[{required:true}]">
+                            <el-input name="key" v-model="totalParam.key" maxlength="32" required/>
+                        </el-form-item>
+                        <el-form-item label="iv：" prop="iv" :rules="[{required:true}]">
+                            <el-input name="iv" v-model="totalParam.iv" minlength="16" maxlength="16" required/>
+                        </el-form-item>
+                        <el-form-item label="串接程式版本：" prop="Version" :rules="[{required:true}]">
+                            <el-input name="Version" v-model="totalParam.Version" maxlength="5" required/>
+                        </el-form-item>
+                        <el-form-item label="回傳格式：" prop="RespondType" :rules="[{required:true}]">
+                            <el-input name="RespondType" v-model="totalParam.RespondType" maxlength="5" required/>
+                        </el-form-item>
+                        <el-form-item label="藍新金流會員：" prop="LoginType" :rules="[{required:true}]">
+                            <el-input name="LoginType" v-model="totalParam.LoginType" type="number" min="0" max="9" required/>
+                        </el-form-item>
+                        <el-form-item label="時間戮記：" prop="TimeStamp" :rules="[{required:true}]">
+                            <el-input name="TimeStamp" v-model="totalParam.TimeStamp" maxlength="50" :readonly="true" required placeholder="此範例由程式自動產出"/>
+                        </el-form-item>
+                        <el-form-item label="商店訂單編號：" prop="MerchantOrderNo" :rules="[{required:true}]">
+                            <el-input name="MerchantOrderNo" v-model="totalParam.MerchantOrderNo" maxlength="30" :readonly="true" required placeholder="此範例由程式自動產出"/>
+                        </el-form-item>
+                        <el-form-item label="商品資訊：" prop="ItemDesc" :rules="[{required:true}]">
+                            <el-input name="ItemDesc" v-model="totalParam.ItemDesc" maxlength="50" required/>
+                        </el-form-item>
+                        <el-form-item label="訂單金額：" prop="Amt" :rules="[{required:true}]">
+                            <el-input name="Amt" v-model="totalParam.Amt" type="number" min="0" max="9999999999" required/>
+                        </el-form-item>
+                        <el-form-item label="付款人電子信箱：" prop="Email" :rules="[{required:true}]">
+                            <el-input name="Email" v-model="totalParam.Email" type="Email" maxlength="50" required/>
+                        </el-form-item>
+                        
+                        <el-form-item label="支付完成返回商店網址：(選填)">
+                            <el-input name="ReturnURL" v-model="totalParam.ReturnURL" maxlength="50"/>
+                        </el-form-item>
+                        <el-form-item label="支付通知網址：(選填)">
+                            <el-input name="NotifyURL" v-model="totalParam.NotifyURL" maxlength="50"/>
+                        </el-form-item>
+                        <el-form-item label="商店取號網址：(選填)">
+                            <el-input name="CustomerURL" v-model="totalParam.CustomerURL" maxlength="50"/>
+                        </el-form-item>
+                        <el-form-item label="返回商店網址：(選填)">
+                            <el-input name="ClientBackURL" v-model="totalParam.ClientBackURL" maxlength="50"/>
+                        </el-form-item>
+                        <el-form-item label="加密模式：(選填)">
+                            <el-input name="EncryptType" v-model="totalParam.EncryptType" maxlength="50" min="0" max="9"/>
+                        </el-form-item>
+                    
+                        <!-- ------------------------------------ 各支付方式 ------------------------------------ -->
+                        <div v-if="selectValue==='creditParam'">
+                            <h4 class="text_center">信用卡一次付清 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="信用卡㇐次付清啟用：" prop="CREDIT" :rules="[{required:true}]">
+                                <el-input name="CREDIT" v-model="totalParam.CREDIT" type="number" min="0" max="1" required/>
+                            </el-form-item>
+                        </div>
+                        <div v-if="selectValue==='instParam'">
+                            <h4 class="text_center">信用卡一次付清 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="信用卡分期付款啟用：" prop="InstFlag" :rules="[{required:true}]">
+                                <el-input name="InstFlag" v-model="totalParam.InstFlag" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='unionParam'">
+                            <h4 class="text_center">銀聯卡交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="銀聯卡交易啟用：" prop="UNIONPAY" :rules="[{required:true}]">
+                                <el-input name="UNIONPAY" v-model="totalParam.UNIONPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='androidParam'">
+                            <h4 class="text_center">Google Pay交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="Google Pay啟用：" prop="ANDROIDPAY" :rules="[{required:true}]">
+                                <el-input name="ANDROIDPAY" v-model="totalParam.ANDROIDPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='samsungParam'">
+                            <h4 class="text_center">Samsung Pay交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="Samsung Pay啟用：" prop="SAMSUNGPAY" :rules="[{required:true}]">
+                                <el-input name="SAMSUNGPAY" v-model="totalParam.SAMSUNGPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='ntcbParam'">
+                            <h4 class="text_center">國民旅遊卡 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="信用卡㇐次付清啟用：" prop="CREDIT" :rules="[{required:true}]">
+                                <el-input name="CREDIT" v-model="totalParam.CREDIT" type="number" min="0" max="1" required/>
+                            </el-form-item>
+                            <el-form-item label="國民旅遊卡交易註記：" prop="NTCB" :rules="[{required:true}]">
+                                <el-input name="NTCB" v-model="totalParam.NTCB" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                            <el-form-item label="旅遊地區代號：" prop="NTCBLocate" :rules="[{required:true}]">
+                                <el-input name="NTCBLocate" v-model="totalParam.NTCBLocate" maxlength="3" required/>
+                            </el-form-item>
+                            <el-form-item label="國民旅遊卡起始日期：" prop="NTCBStartDate" :rules="[{required:true}]">
+                                <el-date-picker name="NTCBStartDate" v-model="totalParam.NTCBStartDate" type="date" format="YYYY/MM/DD" value-format="YYYY-MM-DD" placeholder="YYYY-MM-DD" required/>
+                            </el-form-item>
+                            <el-form-item label="國民旅遊卡結束日期：" prop="NTCBEndDate" :rules="[{required:true}]">
+                                <el-date-picker name="NTCBEndDate" v-model="totalParam.NTCBEndDate" type="date" format="YYYY/MM/DD" value-format="YYYY-MM-DD" placeholder="YYYY-MM-DD" required/>
+                            </el-form-item>
+                        </div>
+                    
+                        <div v-if="selectValue==='webatmParam'">
+                            <h4 class="text_center">WebATM交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="WebATM 啟用：" prop="WEBATM" :rules="[{required:true}]">
+                                <el-input name="WEBATM" v-model="totalParam.WEBATM" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='cvsParam'">
+                            <h4 class="text_center">超商代碼繳費 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="超商代碼繳費啟用：" prop="CVS" :rules="[{required:true}]">
+                                <el-input name="CVS" v-model="totalParam.CVS" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                    
+                        <div v-if="selectValue==='barcodeParam'">
+                            <h4 class="text_center">超商條碼繳費交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="超商條碼繳費交易啟用：" prop="BARCODE" :rules="[{required:true}]">
+                                <el-input name="BARCODE" v-model="totalParam.BARCODE" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='ezCrossParam'">
+                            <h4 class="text_center">跨境支付(Alipay/Wechat) <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="簡單付微信支付：" prop="EZPWECHAT" :rules="[{required:true}]">
+                                <el-input name="EZPWECHAT" v-model="totalParam.EZPWECHAT" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                            <el-form-item label="簡單付支付寶：" prop="EZPALIPAY" :rules="[{required:true}]">
+                                <el-input name="EZPALIPAY" v-model="totalParam.EZPALIPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                    
+                        <div v-if="selectValue==='ezpayParam'">
+                            <h4 class="text_center">簡單付電子錢包 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="簡單付電子錢包：" prop="EZPAY" :rules="[{required:true}]">
+                                <el-input name="EZPAY" v-model="totalParam.EZPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='linepayParam'">
+                            <h4 class="text_center">LINE Pay 交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="LINE Pay 交易：" prop="LINEPAY" :rules="[{required:true}]">
+                                <el-input name="LINEPAY" v-model="totalParam.LINEPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='esunParam'">
+                            <h4 class="text_center">玉山Wallet 交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="玉山Wallet：" prop="ESUNWALLET" :rules="[{required:true}]">
+                                <el-input name="ESUNWALLET" v-model="totalParam.ESUNWALLET" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='taiwanParam'">
+                            <h4 class="text_center">台灣Pay 交易 <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="台灣Pay：" prop="TAIWANPAY" :rules="[{required:true}]">
+                                <el-input name="TAIWANPAY" v-model="totalParam.TAIWANPAY" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+                
+                        <div v-if="selectValue==='lgsParam'">
+                            <h4 class="text_center">超商取貨付款交易流程（含B2C大宗寄倉物流） <el-text type="danger">必填項目</el-text></h4>
+                            <el-form-item label="信用卡㇐次付清啟用：" prop="CREDIT" :rules="[{required:true}]">
+                                <el-input name="CREDIT" v-model="totalParam.CREDIT" type="number" min="0" max="1" required/>
+                            </el-form-item>
+                            <el-form-item label="物流啟用：" prop="CVSCOM" :rules="[{required:true}]">
+                                <el-alert type="info" show-icon :closable="false">
+                                    <span style="color:red;">1=啟用超商取貨不付款 | 2=啟用超商取貨付款 | 3=啟用超商取貨不付款及超商取貨付款 | 0或者未有此參數，即代表不開啟</span>
+                                </el-alert>
+                                <el-input name="CVSCOM" v-model="totalParam.CVSCOM" type="number" min="0" max="3" required/>
+                                
+                            </el-form-item>
+                            <el-form-item label="物流型態：" prop="LgsType" :rules="[{required:true}]">
+                                <el-alert type="info" show-icon :closable="false">
+                                    <span style="color:red;">B2C＝大宗寄倉(目前僅支援 7-ELEVEN) | C2C＝店到店(支援 7-ELEVEN、全家、萊爾富、OK mart) , 詳細請看串接文件</span>
+                                </el-alert>
+                                <el-input name="LgsType" v-model="totalParam.LgsType" type="number" min="0" max="9" required/>
+                            </el-form-item>
+                        </div>
+
+                        <div style="display:flex; justify-content:center;">
+                            <el-button type="primary" @click="createOrder(formRef)" style="margin-top:10px; padding:18px 24px;">
+                                參數轉換
+                            </el-button>
+                        </div>
+                    </el-form>
+                </el-main>
+                <el-footer> © 2024 Neweb Technologies Co., Ltd. </el-footer>
+            </el-container>
+        </el-container>
+    </el-container>
+  </div>
+  
+  <script type="module">
+    const { ref, reactive } = Vue;
+    const App = {
+      setup() {
+        const host = '<%= Host %>';
+        //選擇支付方式
+        let selectName = ref('不指定支付方式(依設定)'); //支付方式名
+        let selectValue = ref('baseParam');           //支付方式值
+        const paywayOptions = [  //支付方式選項       
+            { value: 'baseParam', optionName: '不指定支付方式 (依設定)', checked: true},
+            { value: 'creditParam', optionName: '信用卡一次付清', checked: false },
+            { value: 'instParam', optionName: '信用卡分期付款', checked: false },
+            { value: 'unionParam', optionName: '銀聯卡交易', checked: false },
+            { value: 'androidParam', optionName: 'Google Pay交易', checked: false },
+            { value: 'samsungParam', optionName: 'Samsung Pay交易', checked: false },
+            { value: 'ntcbParam', optionName: '國民旅遊卡', checked: false },
+            { value: 'webatmParam', optionName: 'WebATM交易', checked: false },
+            { value: 'cvsParam', optionName: '超商代碼繳費', checked: false },
+            { value: 'barcodeParam', optionName: '超商條碼繳費交易', checked: false },
+            { value: 'ezCrossParam', optionName: '跨境支付 (Alipay / Wechat)', checked: false },
+            { value: 'ezpayParam', optionName: '簡單付電子錢包', checked: false },
+            { value: 'linepayParam', optionName: 'LINE Pay 交易', checked: false },
+            { value: 'esunParam', optionName: '玉山Wallet 交易', checked: false },
+            { value: 'taiwanParam', optionName: '台灣Pay 支付交易', checked: false },
+            { value: 'lgsParam', optionName: '超商取貨付款交易流程 （含B2C大宗寄倉物流）', checked: false }
+        ];
+
+        let formRef = ref()
+        let totalParam = ref({});
+        let baseParam = ref({ //各支付基本參數 = 不指定支付方式(依設定)
+            url: 'https://ccore.newebpay.com/MPG/mpg_gateway',//藍新MPG交易 API串接網址
+            MerchantID: '<%= MerchantID %>', //商店代號 給藍新必填欄位 參數名不可變動
+            key: '<%= HASHKEY %>',
+            iv: '<%= HASHIV %>',
+            Version: '2.0',                  //串接版本號
+            RespondType: 'JSON',             //回傳格式
+            LoginType: '0',                  //是否須要登入藍新金流會員
+            TimeStamp: '',                   //時間戳記
+            MerchantOrderNo: '',             //商店訂單編號
+            ItemDesc: 'Cheri商品資訊',       //商品資訊
+            Amt: '100',                      //訂單金額
+            Email: 'test@gmail.com',    //付款人信箱
+            ReturnURL: '<%= ReturnURL %>',  //支付完成 返回商店網址
+            NotifyURL: '<%= NotifyURL %>',  //支付通知網址
+            EncryptType: 0,                 //加密模式 AES256方式加密參帶0, AES GCM方式加密帶1
+        });
+        totalParam.value = baseParam.value //init
+
+        function updateSelectedPayway(option) {
+            selectValue.value = option;
+            paywayOptions.forEach(function(item){
+                if (item.value === option){
+                    selectName.value = item.optionName
+                }
+            })
+            console.log(selectName.value)
+            switch (selectValue.value){
+                case 'baseParam': //不指定支付方式(依設定)
+                    totalParam.value = baseParam.value
+                    break;
+                case 'creditParam': // 信用卡一次付清
+                    totalParam.value = {
+                        ...baseParam.value,
+                        CREDIT: 1 
+                    }
+                    break;
+                case 'instParam': // 信用卡分期付款
+                    totalParam.value = {
+                        ...baseParam.value,
+                        InstFlag: 1
+                    }
+                    break;
+                case 'unionParam': // 銀聯卡交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        UNIONPAY: 1
+                    }
+                    break;
+                case 'androidParam': // Google Pay交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        ANDROIDPAY: 1
+                    }
+                    break;
+                case 'samsungParam': // Samsung Pay交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        SAMSUNGPAY: 1
+                    }
+                    break;
+                case 'ntcbParam': // 國民旅遊卡
+                    totalParam.value = {
+                        ...baseParam.value,
+                        CREDIT: 1, //信用卡一次付清需啟用
+                        NTCB: 1, //國民旅遊卡交易註記
+                        NTCBLocate: '001', //旅遊地區代號: 參考旅遊地區代號對照表
+                        NTCBStartDate: '', //國民旅遊卡起始日期
+                        NTCBEndDate: '', //國民旅遊卡結束日期
+                    }
+                    break;
+                case 'webatmParam': // WebATM交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        WEBATM: 1
+                    }
+                    break;
+                case 'cvsParam': // 超商代碼繳費
+                    totalParam.value = {
+                        ...baseParam.value,
+                        CVS: 1
+                    }
+                    break;
+                case 'barcodeParam': // 超商條碼繳費交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        BARCODE: 1
+                    }
+                    break;
+                case 'ezCrossParam': // 跨境支付(Alipay/Wechat)
+                    totalParam.value = {
+                        ...baseParam.value,
+                        EZPWECHAT: 1, //簡單付微信支付
+                        EZPALIPAY: 1  //簡單付支付寶
+                    }
+                    break;
+                case 'ezpayParam': // 簡單付電子錢包
+                    totalParam.value = {
+                        ...baseParam.value,
+                        EZPAY: 1,
+                    }
+                    break;
+                case 'linepayParam': // LINE Pay 交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        LINEPAY: 1,
+                    }
+                    break;
+                case 'esunParam': // 玉山Wallet 交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        ESUNWALLET: 1,
+                    }
+                    break;
+                case 'taiwanParam': // 台灣Pay 支付交易
+                    totalParam.value = {
+                        ...baseParam.value,
+                        TAIWANPAY: 1,
+                    }
+                    break;
+                case 'lgsParam': // 超商取貨付款交易流程（含B2C大宗寄倉物流）
+                    console.log('lgsParam',totalParam.value)
+                    totalParam.value = {
+                        ...baseParam.value,
+                        CREDIT: 1,      //信用卡一次付清需設定 啟用=1
+                        CVSCOM: 3,      //物流啟用: 店到店 1=啟用超商取貨不付款 | 2=啟用超商取貨付款 | 3=啟用超商取貨不付款及超商取貨付款 | 0或者未有此參數，即代表不開啟
+                        LgsType: 'C2C'  //物流型態: B2C＝大宗寄倉(目前僅支援 7-ELEVEN) | C2C＝店到店(支援 7-ELEVEN、全家、萊爾富、OK mart) 
+                    }
+                    break;
+            }
+        };
+
+        async function createOrder(formRef) {
+            try {
+                totalParam.value.TimeStamp = Math.round(new Date().getTime() / 1000); //時間戮記
+                totalParam.value.MerchantOrderNo = totalParam.value.TimeStamp; //商店訂單編號
+                
+                if(!formRef) return
+                await formRef.validate((valid=>{
+                    if(valid){
+                        send()
+                    }else{
+                        console.log('formRef not valid')
+                        return false
+                    }
+                }))
+            } catch (error) {
+                console.log('Encode Error:', error.message);
+            }
+        };
+
+        async function send (){
+            try {
+                const url = `${host}/createOrder`; //後端加密api
+                // return console.log('totalParam', totalParam.value);
+                const res = await axios.post(url, totalParam.value); //後端加密
+                if (res.status === 302 || res.request.responseURL) {
+                    window.location.href = res.request.responseURL;
+                }
+            } catch (error) {
+                console.log('Encode Error:', error.message);
+            }
+        }
+
+        return { formRef, selectName, selectValue, paywayOptions, totalParam, baseParam, updateSelectedPayway, createOrder };
+      }
+    }
+    Vue.createApp(App).use(ElementPlus).mount('#app');
+  </script>
+  <style>
+    .el-aside{
+      background-color: #225b95;
+    }
+    .el-menu{
+      border: 0px;
+    }
+    .el-menu-item{
+      height: 40px;
+      padding-left: 20px;
+    }
+    .el-form-item{
+      /* margin-bottom: 5px; */
+    }
+    .el-icon{
+        width: 20px;
+    }
+    .el-alert__description{
+        line-height: normal;
+    }
+
+  </style>
+</body>
+
+</html>
