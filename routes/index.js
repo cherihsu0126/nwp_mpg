@@ -2,7 +2,7 @@
 const express = require('express');
 const axios = require('axios');
 const router = express.Router();
-const { aes_encrypt, sha_encrypt } = require('./../public/javascripts/crypto');
+const { aes_encrypt, sha_encrypt, aes_decrypt } = require('./../public/javascripts/crypto');
 
 const dotenv = require('dotenv');
 dotenv.config({path: './config.env'});
