@@ -19,7 +19,7 @@
           <el-row>
             <el-col style="display:flex; justify-content: center;">
               <div style="margin-top:30px;">
-                <el-divider content-position="center">訂單資料未加密</el-divider>
+                <el-divider content-position="center">回傳資訊</el-divider>
                 <el-form-item>
                     <el-input v-model="data" type="textarea" cols="100" rows="5" :readyonly="true"/>
                 </el-form-item>
@@ -35,7 +35,7 @@
       const App = {
           setup() {
               const data = ref({});
-              const mpgReturnData = JSON.parse('<%- JSON.stringify(mpgReturnData) %>');
+              const mpgReturnData = JSON.parse('<%- JSON.stringify(nwpReturnData) %>');
               mpgReturnData ? data.value = mpgReturnData : data.value = {}
               console.log(mpgReturnData)
               return { data };
