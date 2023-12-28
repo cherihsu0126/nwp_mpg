@@ -37,6 +37,10 @@ router.post('/createOrder', async (req, res) => { //api
 
 });
 
-
+// 交易成功：=======Return=======
+router.post('/newebpay-return', function (req, res, next) {
+  console.log('req.body return data', req.body);
+  res.render('success', { title: 'Express', Host });
+});
 
 module.exports = router;
