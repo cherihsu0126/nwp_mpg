@@ -37,10 +37,13 @@ router.post('/createOrder', async (req, res) => { //api
 
 });
 
-// 交易成功：=======Return=======
+// ReturnURL
 router.post('/newebpay-return', function (req, res, next) {
   console.log('req.body return data', req.body);
-  res.render('success', { title: 'Express', Host });
+  const response = req.body
+  let nwpReturnData = aes_decrypt(response.TradeInfo, HASHKEY, HASHIV);
+  console.log('nwpReturnData',nwpReturnData)
+  res.render('success', { title: '交易結果', nwpReturnData });
 });
 
 module.exports = router;

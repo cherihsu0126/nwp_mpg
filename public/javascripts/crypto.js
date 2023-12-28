@@ -48,9 +48,19 @@ function dataChain(TradeInfo) {
     return sha.update(plainText).digest('hex').toUpperCase();
   }
   
+  // 將 aes 解密
+  function aes_decrypt(TradeInfo, HASHKEY, HASHIV) {
+    const decrypt = crypto.createDecipheriv('aes256', HASHKEY, HASHIV);
+    decrypt.setAutoPadding(false);
+    const text = decrypt.update(TradeInfo, 'hex', 'utf8');
+    const plainText = text + decrypt.final('utf8');
+    const result = plainText.replace(/[\x00-\x20]+/g, '');
+    return JSON.parse(result);
+  }
 
   module.exports = {
     dataChain,
     aes_encrypt,
-    sha_encrypt
+    sha_encrypt,
+    aes_decrypt
 };
