@@ -1,11 +1,47 @@
+<% /* global JSON */ %>
 <!DOCTYPE html>
 <html>
   <head>
     <title><%= title %></title>
     <link rel="stylesheet" href="./../public/stylesheets/style.css" />
+    <link rel="stylesheet" href="./../public/stylesheets/element-plus/index.min.css">
     <script type="text/javascript" src="./../public/javascripts/viewPlugin/axios.min.js"></script>
+    <script typr="text/javascript" src="./../public/javascripts/viewPlugin/vue.global.min.js"></script>
+    <script typr="text/javascript" src="./../public/javascripts/viewPlugin/element-plus/index.full.min.js"></script>
   </head>
   <body>
-    <h1>結帳成功</h1>
+    <div id="app">
+      <el-container>
+        <el-header height="80px">
+          <h2>藍新<%= title %></h2>
+        </el-header>
+        <el-main>
+          <el-row>
+            <el-col style="display:flex; justify-content: center;">
+              <div style="margin-top:30px;">
+                <el-divider content-position="center">訂單資料未加密</el-divider>
+                <el-form-item>
+                    <el-input v-model="data" type="textarea" cols="100" rows="5" :readyonly="true"/>
+                </el-form-item>
+            </div>
+            </el-col>
+          </el-row>
+        </el-main>
+        <el-footer> © 2024 Neweb Technologies Co., Ltd. </el-footer>
+      </el-container>
+    </div>
+    <script type="module">
+      const { ref } = Vue;
+      const App = {
+          setup() {
+              const data = ref({});
+              const mpgReturnData = JSON.parse('<%- JSON.stringify(mpgReturnData) %>');
+              mpgReturnData ? data.value = mpgReturnData : data.value = {}
+              console.log(mpgReturnData)
+              return { data };
+          }
+      }
+      Vue.createApp(App).use(ElementPlus).mount('#app');
+  </script>
   </body>
 </html>
