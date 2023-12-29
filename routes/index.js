@@ -47,4 +47,23 @@ router.post('/newebpay-return', function (req, res, next) {
   res.render('success', { title: '交易結果', nwpReturnData, decryptData });
 });
 
+// NotifyURL
+router.post('/newebpay-notify', function (req, res, next) {
+  console.log('req.body notify data', req.body);
+  const response = req.body;
+  console.log('response',response)
+  const thisShaEncrypt = sha_encrypt(response.TradeInfo);
+  if ( !thisShaEncrypt === response.TradeSha ) {
+    console.log('付款失敗：TradeSha 不一致');
+    return res.end();
+  }
+
+  // 解密交易內容
+  const decryptData = aes_decrypt(response.TradeInfo);
+  console.log('交易結果：', decryptData);
+
+  return res.end();
+});
+
+
 module.exports = router;
