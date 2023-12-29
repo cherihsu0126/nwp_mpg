@@ -52,7 +52,8 @@ router.post('/newebpay-notify', function (req, res, next) {
   console.log('req.body notify data', req.body);
   const response = req.body;
   console.log('response',response)
-  const thisShaEncrypt = sha_encrypt(response.TradeInfo);
+  const thisShaEncrypt = sha_encrypt(response.TradeInfo, HASHKEY, HASHIV);
+  console.log('thisShaEncrypt',thisShaEncrypt)
   if ( !thisShaEncrypt === response.TradeSha ) {
     console.log('付款失敗：TradeSha 不一致');
     return res.end();
