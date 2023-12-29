@@ -60,7 +60,7 @@ router.post('/newebpay-notify', function (req, res, next) {
   }
 
   // 解密交易內容
-  const decryptData = aes_decrypt(response.TradeInfo);
+  const decryptData = aes_decrypt(response.TradeInfo, HASHKEY, HASHIV);
   console.log('交易結果：', decryptData);
 
   return res.end();
