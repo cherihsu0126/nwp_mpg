@@ -12,17 +12,50 @@
   <body>
     <div id="app">
       <el-container>
-        <el-header height="80px">
+        <el-header>
           <h2>藍新<%= title %></h2>
         </el-header>
         <el-main>
           <el-row>
             <el-col style="display:flex; justify-content: center;">
-              <div style="margin-top:30px;">
-                <el-divider content-position="center">回傳資訊</el-divider>
-                <el-form-item>
-                    <el-input v-model="data" type="textarea" cols="100" rows="5" :readyonly="true"/>
-                </el-form-item>
+              <el-card style="width:70%;">
+                  <template #header>
+                      <div class="card-header">
+                          <b>Node.js AES 解密程式範例</b>
+                          <el-button @click="copyCodeBtn" class="button" text>複製</el-button>
+                      </div>
+                  </template>
+                  <pre id="cryptoCode" style="width:100%; background-color:rgb(54, 55, 58); color:#d5d5d5; margin-bottom:30px;">
+const crypto = require('crypto');
+
+// 將 aes 解密
+function aes_decrypt(TradeInfo, HASHKEY, HASHIV) {
+  const decrypt = crypto.createDecipheriv('aes256', HASHKEY, HASHIV);
+  decrypt.setAutoPadding(false);
+  const text = decrypt.update(TradeInfo, 'hex', 'utf8');
+  const plainText = text + decrypt.final('utf8');
+  const result = plainText.replace(/[\x00-\x20]+/g, '');
+  return JSON.parse(result);
+}
+
+module.exports = {
+  aes_decrypt
+};
+                  </pre>
+              </el-card>
+            </el-col>
+            <el-col style="display:flex; justify-content: center;">
+              <div style="width:60%; margin-top:30px;">
+                  <el-divider content-position="center">未解密回傳TradeInfo資訊</el-divider>
+                  <el-form-item>
+                      <el-input v-model="mpgReturnData" type="textarea" rows="8" :readyonly="true"/>
+                  </el-form-item>
+              </div>
+            </el-col>
+            <el-col style="display:flex; justify-content: center;">
+              <div style="width:60%; margin-top:30px;">
+                <el-divider content-position="center">解密回傳TradeInfo資訊</el-divider>
+                <pre class="preStyle">{{decryptData}}</pre>
             </div>
             </el-col>
           </el-row>
@@ -34,14 +67,22 @@
       const { ref } = Vue;
       const App = {
           setup() {
-              const data = ref({});
-              const mpgReturnData = JSON.parse('<%- JSON.stringify(nwpReturnData) %>');
-              mpgReturnData ? data.value = mpgReturnData : data.value = {}
-              console.log(mpgReturnData)
-              return { data };
+              let mpgReturnData = ref('');
+              let decryptData = ref({});
+              mpgReturnData = JSON.parse('<%- JSON.stringify(nwpReturnData) %>');
+              decryptData = JSON.stringify(JSON.parse('<%- JSON.stringify(decryptData) %>'), null, 4);
+              return { mpgReturnData, decryptData };
           }
       }
       Vue.createApp(App).use(ElementPlus).mount('#app');
   </script>
+  <style>
+      .preStyle{
+        background-color: white;
+        padding: 20px;
+        border-radius: 6px;
+        border: 1px solid lightgray;
+      }
+  </style>
   </body>
 </html>
