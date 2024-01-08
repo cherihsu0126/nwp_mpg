@@ -90,6 +90,7 @@
                             <el-input name="ClientBackURL" v-model="totalParam.ClientBackURL" maxlength="50"/>
                         </el-form-item>
                         <el-form-item label="加密模式：(選填)">
+                            <el-text type="info">本範例無提供AES/GCM加密模式</el-text>
                             <el-input name="EncryptType" v-model="totalParam.EncryptType" maxlength="50" min="0" max="9" :readonly="true"/>
                         </el-form-item>
                     
